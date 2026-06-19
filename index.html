@@ -105,15 +105,33 @@
   }
 
   /* ---------- HOME / LEADERBOARD ---------- */
-  .podium{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:end;margin-bottom:34px}
-  .pod{border-radius:12px 12px 0 0;padding:18px 12px;text-align:center;border:2px solid var(--line);border-bottom:none;position:relative}
-  .pod .rank{font-family:var(--display);font-size:22px;opacity:.85}
-  .pod .mascot{margin:8px auto 2px}
-  .pod .pname{font-family:var(--display);font-size:11px;margin:10px 0 6px;line-height:1.5}
-  .pod .pscore{font-family:var(--display);font-size:18px}
-  .pod.first{background:linear-gradient(180deg,rgba(255,210,63,.22),transparent);min-height:200px}
-  .pod.second{background:linear-gradient(180deg,rgba(0,229,255,.18),transparent);min-height:160px}
-  .pod.third{background:linear-gradient(180deg,rgba(255,46,136,.18),transparent);min-height:130px}
+  .podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:10px;align-items:end;margin-bottom:34px}
+  .pod-col{display:flex;flex-direction:column;justify-content:flex-end;align-items:center}
+  .pod-col.empty{display:none}
+  .pod-card{
+    width:100%;text-align:center;position:relative;
+    background:linear-gradient(160deg,var(--panel),var(--bg2));
+    border:2px solid var(--line);border-bottom:none;
+    border-radius:12px 12px 0 0;padding:16px 10px 14px;
+  }
+  .pod-card .mascot{margin:2px auto 6px}
+  .pname{font-family:var(--display);font-size:10px;line-height:1.5;margin-bottom:8px}
+  .pscore{font-family:var(--display);font-size:18px}
+  .pscore span{font-size:8px;opacity:.7}
+  .crown{font-size:26px;position:absolute;top:-30px;left:50%;transform:translateX(-50%)}
+
+  .pod-step{
+    width:100%;display:grid;place-items:center;
+    border:2px solid color-mix(in srgb,var(--c) 60%, var(--line));
+    border-top:none;border-radius:0 0 8px 8px;
+    background:linear-gradient(180deg,color-mix(in srgb,var(--c) 26%,transparent),color-mix(in srgb,var(--c) 8%,transparent));
+    box-shadow:inset 0 2px 0 color-mix(in srgb,var(--c) 45%,transparent);
+  }
+  .pod-step.first{height:96px}
+  .pod-step.second{height:62px}
+  .pod-step.third{height:38px}
+  .step-rank{font-family:var(--display);font-size:26px;color:var(--c);text-shadow:0 0 12px color-mix(in srgb,var(--c) 60%,transparent)}
+  .pod-step.second .step-rank,.pod-step.third .step-rank{font-size:20px}
   .first .rank{color:var(--p3)} .second .rank{color:var(--p2)} .third .rank{color:var(--p1)}
   .crown{font-size:26px;position:absolute;top:-30px;left:50%;transform:translateX(-50%)}
 
@@ -186,13 +204,19 @@
   .slot-name{
     font-family:var(--display);font-size:clamp(16px,4.2vw,30px);line-height:1.5;min-height:1.6em;
   }
+  .namebtn{
+    background:transparent;border:2px dashed transparent;color:var(--ink);cursor:pointer;
+    padding:14px 22px;border-radius:12px;transition:.15s;
+  }
+  .namebtn.pulse{border-color:var(--line);animation:pulse 1.3s ease-in-out infinite}
+  .namebtn.pulse:hover{border-color:var(--p2);box-shadow:0 0 18px rgba(0,229,255,.35)}
+  .namebtn:focus-visible{outline:3px solid var(--p3);outline-offset:3px}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
   .slot-team{font-family:var(--display);font-size:clamp(13px,3vw,20px);min-height:1.4em;opacity:0;transition:opacity .4s;
     display:flex;align-items:center;justify-content:center;gap:12px}
   .slot-team.in{opacity:1}
   .arrow{font-family:var(--display);font-size:14px;color:var(--dim);opacity:0;transition:.3s}
   .arrow.in{opacity:1}
-  .spin{animation:flick .06s steps(1) infinite}
-  @keyframes flick{50%{opacity:.35;transform:translateY(-2px)}}
   .burst{animation:burst .5s ease}
   @keyframes burst{0%{transform:scale(.6);filter:brightness(2)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
   .reveal-progress{font-family:var(--display);font-size:8px;color:var(--dim);letter-spacing:1px}
@@ -219,8 +243,14 @@
   .toast.show{opacity:1;transform:translateX(-50%)}
 
   @media(max-width:560px){
-    .podium{grid-template-columns:1fr;align-items:stretch}
-    .pod{min-height:auto !important;border-radius:12px;border-bottom:2px solid var(--line)}
+    .podium{gap:5px}
+    .pod-card{padding:12px 5px 10px}
+    .pname{font-size:8px}
+    .pscore{font-size:14px}
+    .pod-step.first{height:70px}
+    .pod-step.second{height:46px}
+    .pod-step.third{height:28px}
+    .step-rank{font-size:20px}
     th,td{padding:8px 6px;font-size:13px}
   }
 </style>
@@ -293,14 +323,14 @@
   <section class="page" id="reveal">
     <p class="eyebrow">// Who's on whose side?</p>
     <h1>TEAM <span class="glitch">REVEAL</span></h1>
-    <p class="sub">Roll the reels. One by one, each player gets locked onto their squad — no take-backs.</p>
+    <p class="sub">One player at a time. A name appears — tap it to reveal their team, then move on to the next.</p>
 
     <div class="reveal-stage">
       <div class="reveal-progress" id="revProgress">PRESS START</div>
-      <div class="slot-name" id="slotName">— — —</div>
+      <button class="slot-name namebtn" id="slotName">▶ Start reveal</button>
       <div class="arrow" id="slotArrow">▼ ASSIGNED TO ▼</div>
       <div class="slot-team" id="slotTeam"></div>
-      <button class="btn" id="revealBtn">▶ Start reveal</button>
+      <button class="btn" id="nextBtn" style="display:none">Next player ▶</button>
     </div>
 
     <div class="revealed-board" id="revBoard"></div>
@@ -404,15 +434,15 @@ const games = [
     ]
   },
   {
-    name:'Penny Stack',
-    tag:'Precision · One hand',
-    icon:'pennies',
-    blurb:'A pile of pennies and one steady hand. That\u2019s the whole game.',
+    name:'Skeeball',
+    tag:'Aim · Solo run',
+    icon:'skeeball',
+    blurb:'Launch your item down the track and land it in the scoring targets.',
     steps:[
-      'Using only ONE hand, stack every penny into a single tower.',
-      'No second hand, no leaning the tower on anything.',
-      'If it topples, keep building — the clock is still running.',
-      'Fastest team to stack all pennies in one tower wins.'
+      'One player launches their item down the track toward the targets.',
+      'Different targets are worth different point values.',
+      'Aim for the high-value targets — but any landing scores.',
+      'The team with the most total points wins.'
     ]
   },
   {
@@ -519,13 +549,17 @@ function renderLeaderboard(){
     {key:'third', rank:'3',i:order[2]},
   ];
   pod.innerHTML = slots.map(s=>{
-    if(s.i==null) return '<div></div>';
-    return `<div class="pod ${s.key}" style="border-color:${COLORS[s.i]}">
-      ${s.crown?`<div class="crown">👑</div>`:''}
-      <div class="rank">${s.rank}</div>
-      ${mascotSVG(s.i,52)}
-      <div class="pname" style="color:${COLORS[s.i]}">${esc(teams[s.i].name)}</div>
-      <div class="pscore">${t[s.i]}</div>
+    if(s.i==null) return '<div class="pod-col empty"></div>';
+    return `<div class="pod-col">
+      <div class="pod-card" style="border-color:${COLORS[s.i]}">
+        ${s.crown?`<div class="crown">👑</div>`:''}
+        ${mascotSVG(s.i,50)}
+        <div class="pname" style="color:${COLORS[s.i]}">${esc(teams[s.i].name)}</div>
+        <div class="pscore" style="color:${COLORS[s.i]}">${t[s.i]} <span>pts</span></div>
+      </div>
+      <div class="pod-step ${s.key}" style="--c:${COLORS[s.i]}">
+        <span class="step-rank">${s.rank}</span>
+      </div>
     </div>`;
   }).join('');
 }
@@ -569,7 +603,7 @@ document.getElementById('resetBtn').addEventListener('click',()=>{
 /* ---------------- GAMES ---------------- */
 const ICONS = {
   cups:`<svg viewBox="0 0 64 64" width="46" height="46"><g fill="none" stroke="var(--p3)" stroke-width="3" stroke-linejoin="round"><path d="M14 26h16l-3 22H17z"/><path d="M34 26h16l-3 22H37z"/><path d="M24 8h16l-3 16H27z"/></g></svg>`,
-  pennies:`<svg viewBox="0 0 64 64" width="46" height="46"><g fill="none" stroke="var(--p3)" stroke-width="3"><ellipse cx="32" cy="46" rx="16" ry="6"/><ellipse cx="32" cy="36" rx="16" ry="6"/><ellipse cx="32" cy="26" rx="16" ry="6"/><ellipse cx="32" cy="16" rx="16" ry="6"/></g></svg>`,
+  skeeball:`<svg viewBox="0 0 64 64" width="46" height="46"><g fill="none" stroke="var(--p3)" stroke-width="3" stroke-linejoin="round"><circle cx="44" cy="28" r="13"/><circle cx="44" cy="28" r="7"/><circle cx="44" cy="28" r="2" fill="var(--p3)"/><circle cx="14" cy="46" r="5" fill="var(--p3)" stroke="none"/><path d="M18 43l14-9" stroke-dasharray="3 4"/></g></svg>`,
   duck:`<svg viewBox="0 0 64 64" width="46" height="46"><g fill="none" stroke="var(--p3)" stroke-width="3" stroke-linejoin="round"><path d="M20 40c0-9 7-16 16-16s14 6 14 14c0 8-7 12-15 12H22c-6 0-10-3-10-8 0-4 3-6 8-6"/><path d="M50 30l8-3-6 7"/><circle cx="40" cy="28" r="1.6" fill="var(--p3)"/></g></svg>`,
   balls:`<svg viewBox="0 0 64 64" width="46" height="46"><g fill="none" stroke="var(--p3)" stroke-width="3"><circle cx="26" cy="14" r="5"/><circle cx="40" cy="20" r="5"/><path d="M14 44h36l-4 12H18z"/><path d="M30 44v-6M40 44v-2"/></g></svg>`,
   puzzle:`<svg viewBox="0 0 64 64" width="46" height="46"><g fill="none" stroke="var(--p3)" stroke-width="3" stroke-linejoin="round"><path d="M14 14h16v8a4 4 0 108 0v-8h12v16h-8a4 4 0 100 8h8v12H30v-8a4 4 0 10-8 0v8H14z"/></g></svg>`,
@@ -662,67 +696,76 @@ function renderRevealBoard(){
       <ul id="revList${i}"></ul>
     </div>`).join('');
 }
-let revealing=false;
-document.getElementById('revealBtn').addEventListener('click',runReveal);
-function runReveal(){
-  if(revealing) return;
-  revealing=true;
-  buildRevealOrder();
-  renderRevealBoard();
-  document.querySelectorAll('.rev-team').forEach(e=>e.classList.remove('lit'));
-  const btn=document.getElementById('revealBtn');
-  btn.disabled=true; btn.textContent='Rolling…';
-  const nameEl=document.getElementById('slotName');
-  const teamEl=document.getElementById('slotTeam');
-  const arrowEl=document.getElementById('slotArrow');
-  const prog=document.getElementById('revProgress');
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  let idx=0;
-  const allNames = teams.flatMap(t=>t.players.filter(p=>p.trim()));
+let revIdx = 0;          // index of player currently being shown
+let revState = 'idle';   // 'idle' | 'name' (awaiting tap) | 'revealed' (awaiting next)
+const nameEl  = document.getElementById('slotName');
+const teamEl  = document.getElementById('slotTeam');
+const arrowEl = document.getElementById('slotArrow');
+const progEl  = document.getElementById('revProgress');
+const nextBtn = document.getElementById('nextBtn');
 
-  function next(){
-    if(idx>=revealOrder.length){
-      nameEl.textContent='🏆 TEAMS SET 🏆';
-      nameEl.className='slot-name';
-      teamEl.textContent=''; teamEl.classList.remove('in');
-      arrowEl.classList.remove('in');
-      prog.textContent='ALL PLAYERS ASSIGNED';
-      btn.disabled=false; btn.textContent='▶ Reveal again'; revealing=false;
-      return;
-    }
-    const {name,team}=revealOrder[idx];
-    prog.textContent=`PLAYER ${idx+1} / ${revealOrder.length}`;
-    teamEl.classList.remove('in'); arrowEl.classList.remove('in');
-    nameEl.className='slot-name spin';
+// tapping the name area both starts the reveal and reveals each player's team
+nameEl.addEventListener('click', onNameTap);
+nextBtn.addEventListener('click', showNextPlayer);
 
-    let ticks=0;
-    const spinMs = reduced?0:60;
-    const totalTicks = reduced?1:14;
-    const spin=setInterval(()=>{
-      nameEl.textContent = allNames[Math.floor(Math.random()*allNames.length)];
-      if(++ticks>=totalTicks){
-        clearInterval(spin);
-        nameEl.textContent=name;
-        nameEl.className='slot-name burst';
-        nameEl.style.color=COLORS[team];
-        arrowEl.classList.add('in');
-        teamEl.innerHTML=mascotSVG(team,40)+'<span>'+esc(teams[team].name)+'</span>';
-        teamEl.style.color=COLORS[team];
-        setTimeout(()=>teamEl.classList.add('in'),120);
-        // light up the team + add player
-        const tc=document.getElementById('revTeam'+team);
-        tc.classList.add('lit');
-        const li=document.createElement('li');
-        li.innerHTML=mascotSVG(team,22)+esc(name);
-        document.getElementById('revList'+team).appendChild(li);
-        setTimeout(()=>li.classList.add('in'),60);
-        idx++;
-        setTimeout(next, reduced?200:1100);
-      }
-    }, spinMs || 1);
+function onNameTap(){
+  if(revState === 'idle'){            // start
+    buildRevealOrder();
+    renderRevealBoard();
+    document.querySelectorAll('.rev-team').forEach(e=>e.classList.remove('lit'));
+    revIdx = 0;
+    showNextPlayer();
+  } else if(revState === 'name'){     // reveal this player's team
+    revealTeam();
   }
-  next();
+}
+
+function showNextPlayer(){
+  if(revIdx >= revealOrder.length){   // done
+    nameEl.className = 'slot-name namebtn';
+    nameEl.style.color = '';
+    nameEl.textContent = '🏆 TEAMS SET 🏆';
+    teamEl.classList.remove('in'); teamEl.innerHTML='';
+    arrowEl.classList.remove('in');
+    progEl.textContent = 'ALL PLAYERS ASSIGNED';
+    nextBtn.style.display = 'none';
+    revState = 'done';
+    return;
+  }
+  const {name} = revealOrder[revIdx];
+  progEl.textContent = `PLAYER ${revIdx+1} / ${revealOrder.length} · TAP THE NAME`;
+  nameEl.className = 'slot-name namebtn pulse';
+  nameEl.style.color = '';
+  nameEl.textContent = name;
+  teamEl.classList.remove('in'); teamEl.innerHTML='';
+  arrowEl.classList.remove('in');
+  nextBtn.style.display = 'none';
+  revState = 'name';
+}
+
+function revealTeam(){
+  const {name,team} = revealOrder[revIdx];
+  nameEl.className = 'slot-name namebtn burst';
+  nameEl.style.color = COLORS[team];
+  arrowEl.classList.add('in');
+  teamEl.innerHTML = mascotSVG(team,40) + '<span>' + esc(teams[team].name) + '</span>';
+  teamEl.style.color = COLORS[team];
+  setTimeout(()=>teamEl.classList.add('in'), 80);
+
+  // light up team + add player to the board
+  const tc = document.getElementById('revTeam'+team);
+  tc.classList.add('lit');
+  const li = document.createElement('li');
+  li.innerHTML = mascotSVG(team,22) + esc(name);
+  document.getElementById('revList'+team).appendChild(li);
+  setTimeout(()=>li.classList.add('in'), 60);
+
+  revIdx++;
+  revState = 'revealed';
+  nextBtn.style.display = '';
+  nextBtn.textContent = revIdx >= revealOrder.length ? 'Finish ▶' : 'Next player ▶';
+  progEl.textContent = `${revIdx} / ${revealOrder.length} REVEALED`;
 }
 
 /* ---------------- UTIL ---------------- */
