@@ -892,14 +892,15 @@ toTeamReveal.addEventListener('click',()=>go('reveal'));
 /* ---------------- REVEAL ---------------- */
 let revealOrder = [];
 function buildRevealOrder(){
-  // interleave players across teams so the reveal jumps around
+  // collect every player, then shuffle so the reveal order is random each run
   revealOrder = [];
-  const max = Math.max(...teams.map(t=>t.players.filter(p=>p.trim()).length));
-  for(let s=0;s<max;s++){
-    teams.forEach((t,ti)=>{
-      const p = t.players.filter(x=>x.trim())[s];
-      if(p) revealOrder.push({name:p,team:ti});
-    });
+  teams.forEach((t,ti)=>{
+    t.players.forEach(p=>{ if(p.trim()) revealOrder.push({name:p,team:ti}); });
+  });
+  // Fisher-Yates shuffle
+  for(let i=revealOrder.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [revealOrder[i],revealOrder[j]]=[revealOrder[j],revealOrder[i]];
   }
 }
 function renderRevealBoard(){
@@ -925,8 +926,7 @@ nextBtn.addEventListener('click', showNextPlayer);
 
 function onNameTap(){
   if(revState === 'idle'){            // start
-    buildRevealOrder();
-    renderRevealBoard();
+    renderRevealBoard();              // builds + shuffles the order once
     document.querySelectorAll('.rev-team').forEach(e=>e.classList.remove('lit'));
     revIdx = 0;
     showNextPlayer();
