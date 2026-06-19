@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Truckee Games — Tournament Arena</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Chakra+Petch:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0118;
+    --bg2:#140628;
+    --panel:#1c0a38;
+    --panel2:#250d49;
+    --ink:#eafff7;
+    --dim:#9d8cc4;
+    --line:#3a1d63;
+    --p1:#ff2e88;   /* hot pink */
+    --p2:#00e5ff;   /* cyan */
+    --p3:#ffd23f;   /* gold */
+    --t1:#ff2e88;   /* Unstable Hamsters */
+    --t2:#00e5ff;   /* Caffeinated Koalas */
+    --t3:#7cff5b;   /* Feral Goldfish */
+    --display:"Press Start 2P", monospace;
+    --body:"Chakra Petch", sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--body);
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+  }
+  /* CRT grid + scanlines */
+  body::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      linear-gradient(rgba(124,92,255,.04) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(124,92,255,.04) 1px,transparent 1px);
+    background-size:34px 34px;
+    mask-image:radial-gradient(circle at 50% 30%,#000 0%,transparent 85%);
+  }
+  body::after{
+    content:"";position:fixed;inset:0;z-index:999;pointer-events:none;
+    background:repeating-linear-gradient(transparent 0 2px,rgba(0,0,0,.18) 2px 4px);
+    mix-blend-mode:multiply;opacity:.5;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important}
+  }
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:sticky;top:0;z-index:100;
+    display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+    padding:14px 20px;
+    background:rgba(10,1,24,.82);
+    backdrop-filter:blur(10px);
+    border-bottom:2px solid var(--line);
+  }
+  .brand{
+    font-family:var(--display);font-size:11px;letter-spacing:1px;
+    color:var(--p3);margin-right:auto;
+    text-shadow:0 0 8px rgba(255,210,63,.5);
+  }
+  .brand b{color:var(--p1)}
+  nav button{
+    font-family:var(--display);font-size:8px;letter-spacing:.5px;
+    background:transparent;color:var(--dim);border:2px solid transparent;
+    padding:9px 11px;cursor:pointer;border-radius:4px;transition:.15s;
+    text-transform:uppercase;
+  }
+  nav button:hover{color:var(--ink);border-color:var(--line)}
+  nav button.active{
+    color:var(--bg);background:var(--p2);
+    box-shadow:0 0 14px rgba(0,229,255,.6);
+  }
+  nav button:focus-visible{outline:3px solid var(--p3);outline-offset:2px}
+
+  /* ---------- LAYOUT ---------- */
+  main{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:40px 20px 90px}
+  .page{display:none;animation:fadein .35s ease}
+  .page.show{display:block}
+  @keyframes fadein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  .eyebrow{
+    font-family:var(--display);font-size:9px;letter-spacing:3px;
+    color:var(--p2);text-transform:uppercase;margin-bottom:14px;
+  }
+  h1{
+    font-family:var(--display);line-height:1.5;
+    font-size:clamp(20px,5vw,40px);margin-bottom:10px;
+  }
+  .glitch{color:var(--p1);text-shadow:3px 0 var(--p2),-3px 0 var(--p3)}
+  .sub{color:var(--dim);font-size:18px;max-width:60ch;margin-bottom:34px}
+  h2{font-family:var(--display);font-size:15px;margin:38px 0 18px;color:var(--p3)}
+
+  .card{
+    background:linear-gradient(160deg,var(--panel),var(--bg2));
+    border:2px solid var(--line);border-radius:12px;padding:22px;
+  }
+
+  /* ---------- HOME / LEADERBOARD ---------- */
+  .podium{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:end;margin-bottom:34px}
+  .pod{border-radius:12px 12px 0 0;padding:18px 12px;text-align:center;border:2px solid var(--line);border-bottom:none;position:relative}
+  .pod .rank{font-family:var(--display);font-size:22px;opacity:.85}
+  .pod .mascot{margin:8px auto 2px}
+  .pod .pname{font-family:var(--display);font-size:11px;margin:10px 0 6px;line-height:1.5}
+  .pod .pscore{font-family:var(--display);font-size:18px}
+  .pod.first{background:linear-gradient(180deg,rgba(255,210,63,.22),transparent);min-height:200px}
+  .pod.second{background:linear-gradient(180deg,rgba(0,229,255,.18),transparent);min-height:160px}
+  .pod.third{background:linear-gradient(180deg,rgba(255,46,136,.18),transparent);min-height:130px}
+  .first .rank{color:var(--p3)} .second .rank{color:var(--p2)} .third .rank{color:var(--p1)}
+  .crown{font-size:26px;position:absolute;top:-30px;left:50%;transform:translateX(-50%)}
+
+  table{width:100%;border-collapse:collapse;font-size:15px}
+  th,td{padding:11px 12px;text-align:center;border-bottom:1px solid var(--line)}
+  th{font-family:var(--display);font-size:8px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
+  th:first-child,td:first-child{text-align:left}
+  .swatch{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:8px;vertical-align:middle}
+  td.total{font-family:var(--display);font-size:14px}
+  tr.lead td{background:rgba(255,210,63,.07)}
+
+  .entry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:14px}
+  .game-entry h3{font-family:var(--display);font-size:10px;color:var(--p2);margin-bottom:14px;line-height:1.5}
+  .game-entry .num{color:var(--dim);margin-right:6px}
+  .place-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .place-tag{font-family:var(--display);font-size:8px;width:74px;flex:none}
+  .place-tag.p1{color:var(--p3)} .place-tag.p2{color:var(--p2)} .place-tag.p3{color:var(--p1)}
+  select,input{
+    font-family:var(--body);font-size:14px;background:var(--bg);color:var(--ink);
+    border:2px solid var(--line);border-radius:7px;padding:8px 10px;width:100%;
+  }
+  select:focus,input:focus{outline:none;border-color:var(--p2);box-shadow:0 0 10px rgba(0,229,255,.4)}
+  .pts{font-family:var(--display);font-size:9px;color:var(--dim);flex:none;width:34px;text-align:right}
+
+  .btn{
+    font-family:var(--display);font-size:10px;letter-spacing:1px;cursor:pointer;
+    background:var(--p2);color:var(--bg);border:none;border-radius:8px;
+    padding:14px 20px;margin-top:8px;transition:.15s;text-transform:uppercase;
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 6px 0 rgba(0,229,255,.35)}
+  .btn:active{transform:translateY(0)}
+  .btn.ghost{background:transparent;color:var(--dim);border:2px solid var(--line)}
+  .btn.ghost:hover{color:var(--ink);box-shadow:none}
+  .btn:focus-visible{outline:3px solid var(--p3);outline-offset:2px}
+  .toolbar{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
+
+  /* ---------- GAMES OVERVIEW ---------- */
+  .games-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+  .gcard{position:relative;overflow:hidden;transition:.2s}
+  .gcard:hover{transform:translateY(-4px);border-color:var(--p2);box-shadow:0 0 20px rgba(0,229,255,.2)}
+  .gcard .gnum{font-family:var(--display);font-size:30px;color:var(--line);position:absolute;top:14px;right:16px}
+  .gcard .gicon{margin-bottom:14px;filter:drop-shadow(0 0 8px rgba(255,210,63,.35))}
+  .gcard h3{font-family:var(--display);font-size:12px;margin-bottom:12px;color:var(--p3);line-height:1.6;max-width:80%}
+  .gcard p{color:var(--dim);font-size:15px;line-height:1.5}
+  .gcard .steps{list-style:none;counter-reset:s;margin:16px 0 4px;display:flex;flex-direction:column;gap:9px}
+  .gcard .steps li{counter-increment:s;position:relative;padding-left:30px;font-size:14px;line-height:1.45;color:var(--ink)}
+  .gcard .steps li::before{content:counter(s);position:absolute;left:0;top:0;width:20px;height:20px;
+    font-family:var(--display);font-size:8px;color:var(--bg);background:var(--p2);border-radius:5px;
+    display:grid;place-items:center}
+  .gcard .tagline{display:inline-block;margin-top:14px;font-family:var(--display);font-size:7px;letter-spacing:1px;color:var(--p2);border:1px solid var(--line);padding:5px 8px;border-radius:5px}
+
+  /* ---------- TEAMS ---------- */
+  .teams-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+  .team-card{border:2px solid;border-radius:14px;padding:22px;background:linear-gradient(160deg,var(--panel),var(--bg2))}
+  .team-card .thead{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+  .team-card .tname{font-family:var(--display);font-size:14px;line-height:1.6;margin-bottom:4px}
+  .team-card .tmeta{font-size:13px;color:var(--dim)}
+  .roster{list-style:none;display:flex;flex-direction:column;gap:8px}
+  .roster li{display:flex;align-items:center;gap:12px;font-size:17px;padding:9px 12px;background:rgba(0,0,0,.25);border-radius:8px}
+  .mascot{display:inline-grid;place-items:center;flex:none;
+    filter:drop-shadow(0 0 6px currentColor)}
+  .mascot svg{width:100%;height:100%}
+
+  /* ---------- REVEAL ---------- */
+  .reveal-stage{
+    border:2px solid var(--line);border-radius:16px;padding:36px 20px;text-align:center;
+    background:radial-gradient(circle at 50% 0%,var(--panel2),var(--bg) 80%);min-height:340px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
+  }
+  .slot-name{
+    font-family:var(--display);font-size:clamp(16px,4.2vw,30px);line-height:1.5;min-height:1.6em;
+  }
+  .slot-team{font-family:var(--display);font-size:clamp(13px,3vw,20px);min-height:1.4em;opacity:0;transition:opacity .4s;
+    display:flex;align-items:center;justify-content:center;gap:12px}
+  .slot-team.in{opacity:1}
+  .arrow{font-family:var(--display);font-size:14px;color:var(--dim);opacity:0;transition:.3s}
+  .arrow.in{opacity:1}
+  .spin{animation:flick .06s steps(1) infinite}
+  @keyframes flick{50%{opacity:.35;transform:translateY(-2px)}}
+  .burst{animation:burst .5s ease}
+  @keyframes burst{0%{transform:scale(.6);filter:brightness(2)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+  .reveal-progress{font-family:var(--display);font-size:8px;color:var(--dim);letter-spacing:1px}
+  .revealed-board{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:26px}
+  .rev-team{border:2px solid;border-radius:12px;padding:16px;opacity:.25;transition:.4s}
+  .rev-team.lit{opacity:1;box-shadow:0 0 22px -6px currentColor}
+  .rev-team h4{font-family:var(--display);font-size:10px;line-height:1.6;margin-bottom:10px}
+  .rev-team ul{list-style:none;display:flex;flex-direction:column;gap:5px}
+  .rev-team li{font-size:15px;color:var(--ink);opacity:0;transform:translateX(-8px);transition:.3s;
+    display:flex;align-items:center;gap:10px}
+  .rev-team li.in{opacity:1;transform:none}
+
+  /* ---------- ADMIN ---------- */
+  details.admin{margin-top:40px;border:2px dashed var(--line);border-radius:12px;padding:4px 18px;background:rgba(0,0,0,.2)}
+  details.admin summary{font-family:var(--display);font-size:9px;letter-spacing:1px;color:var(--dim);cursor:pointer;padding:14px 0;text-transform:uppercase}
+  details.admin[open] summary{color:var(--p3)}
+  .admin-team{margin:18px 0;padding:16px;border:2px solid var(--line);border-radius:10px}
+  .admin-team .fieldrow{display:grid;grid-template-columns:90px 1fr;gap:10px;align-items:center;margin-bottom:8px}
+  .admin-team .fieldrow label{font-family:var(--display);font-size:7px;color:var(--dim);letter-spacing:1px}
+  .hint{color:var(--dim);font-size:14px;margin:6px 0 18px}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);z-index:1000;
+    background:var(--p3);color:var(--bg);font-family:var(--display);font-size:9px;padding:14px 20px;border-radius:8px;
+    opacity:0;transition:.3s;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%)}
+
+  @media(max-width:560px){
+    .podium{grid-template-columns:1fr;align-items:stretch}
+    .pod{min-height:auto !important;border-radius:12px;border-bottom:2px solid var(--line)}
+    th,td{padding:8px 6px;font-size:13px}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand"><b>▶</b> THE&nbsp;TRUCKEE&nbsp;GAMES</span>
+  <button data-go="home" class="active">Leaderboard</button>
+  <button data-go="games">The Games</button>
+  <button data-go="teams">The Teams</button>
+  <button data-go="reveal">Reveal</button>
+</nav>
+
+<main>
+
+  <!-- ============ HOME / LEADERBOARD ============ -->
+  <section class="page show" id="home">
+    <p class="eyebrow">// Standings · Live</p>
+    <h1>THE <span class="glitch">LEADERBOARD</span></h1>
+    <p class="sub">Enter the top three finishers for each game. First takes 3 points, second takes 2, third takes 1. Totals update instantly.</p>
+
+    <div class="card">
+      <table>
+        <thead>
+          <tr><th>Team</th><th>🥇 ×3</th><th>🥈 ×2</th><th>🥉 ×1</th><th>Total</th></tr>
+        </thead>
+        <tbody id="lbBody"></tbody>
+      </table>
+    </div>
+
+    <h2>Enter results</h2>
+    <p class="hint">Each game awards points once. Leave a slot empty if it hasn't been played yet.</p>
+    <div class="entry-grid" id="entryGrid"></div>
+
+    <div class="toolbar">
+      <button class="btn" id="saveBtn">Save scores</button>
+      <button class="btn ghost" id="resetBtn">Reset all scores</button>
+    </div>
+
+    <h2>The Podium</h2>
+    <p class="hint">Top three teams by total points. Updates the moment you enter a result.</p>
+    <div class="podium" id="podium"></div>
+  </section>
+
+  <!-- ============ GAMES ============ -->
+  <section class="page" id="games">
+    <p class="eyebrow">// 6 Events · 1 Champion</p>
+    <h1>THE <span class="glitch">GAMES</span></h1>
+    <p class="sub">Seven events, played in order. Every game crowns a top three — and every point counts toward the trophy.</p>
+    <div class="games-list" id="gamesList"></div>
+  </section>
+
+  <!-- ============ TEAMS ============ -->
+  <section class="page" id="teams">
+    <p class="eyebrow">// 3 Squads · 12 Players</p>
+    <h1>THE <span class="glitch">TEAMS</span></h1>
+    <p class="sub">The rosters are locked. Three teams enter the arena — only one leaves with the crown.</p>
+    <div class="teams-grid" id="teamsGrid"></div>
+
+    <details class="admin">
+      <summary>⚙ Organizer settings — edit team names &amp; rosters</summary>
+      <p class="hint">Change team names and reassign players here. Click “Apply changes” to update every page. Four player slots per team — leave a slot blank to drop it.</p>
+      <div id="adminTeams"></div>
+      <button class="btn" id="applyBtn">Apply changes</button>
+    </details>
+  </section>
+
+  <!-- ============ REVEAL ============ -->
+  <section class="page" id="reveal">
+    <p class="eyebrow">// Who's on whose side?</p>
+    <h1>TEAM <span class="glitch">REVEAL</span></h1>
+    <p class="sub">Roll the reels. One by one, each player gets locked onto their squad — no take-backs.</p>
+
+    <div class="reveal-stage">
+      <div class="reveal-progress" id="revProgress">PRESS START</div>
+      <div class="slot-name" id="slotName">— — —</div>
+      <div class="arrow" id="slotArrow">▼ ASSIGNED TO ▼</div>
+      <div class="slot-team" id="slotTeam"></div>
+      <button class="btn" id="revealBtn">▶ Start reveal</button>
+    </div>
+
+    <div class="revealed-board" id="revBoard"></div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast">Saved!</div>
+
+<script>
+/* ---------------- DATA ---------------- */
+const COLORS = ['var(--t1)','var(--t2)','var(--t3)'];
+
+/* Modern mascots — smooth vector characters (Mario-Kart-style icon look).
+   Body uses currentColor so each adopts its team color; gradients add shading,
+   plus white eyes with highlights and soft cheek/detail accents. */
+const MASCOTS = {
+  hamster:`<svg viewBox="0 0 64 64"><defs>
+    <radialGradient id="hm-g" cx="40%" cy="32%" r="75%">
+      <stop offset="0%" stop-color="#fff" stop-opacity=".45"/>
+      <stop offset="45%" stop-color="currentColor"/>
+      <stop offset="100%" stop-color="#000" stop-opacity=".28"/></radialGradient></defs>
+    <g stroke="rgba(0,0,0,.35)" stroke-width="2">
+      <ellipse cx="18" cy="16" rx="8" ry="9" fill="currentColor"/>
+      <ellipse cx="46" cy="16" rx="8" ry="9" fill="currentColor"/>
+      <circle cx="18" cy="16" r="3.5" fill="#ffc1dd" stroke="none"/>
+      <circle cx="46" cy="16" r="3.5" fill="#ffc1dd" stroke="none"/>
+      <ellipse cx="32" cy="36" rx="22" ry="20" fill="url(#hm-g)"/></g>
+    <ellipse cx="32" cy="42" rx="12" ry="9" fill="#fff" opacity=".9"/>
+    <g stroke="none">
+      <circle cx="24" cy="33" r="5.5" fill="#fff"/><circle cx="40" cy="33" r="5.5" fill="#fff"/>
+      <circle cx="25" cy="34" r="3" fill="#1a1030"/><circle cx="41" cy="34" r="3" fill="#1a1030"/>
+      <circle cx="26.2" cy="32.8" r="1" fill="#fff"/><circle cx="42.2" cy="32.8" r="1" fill="#fff"/>
+      <ellipse cx="32" cy="40" rx="2.4" ry="1.8" fill="#ff7fb0"/>
+      <path d="M28 45c2 2 6 2 8 0" fill="none" stroke="#1a1030" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="16" cy="42" r="3" fill="#ff9ec4" opacity=".7"/>
+      <circle cx="48" cy="42" r="3" fill="#ff9ec4" opacity=".7"/></g></svg>`,
+
+  koala:`<svg viewBox="0 0 64 64"><defs>
+    <radialGradient id="ko-g" cx="40%" cy="32%" r="75%">
+      <stop offset="0%" stop-color="#fff" stop-opacity=".5"/>
+      <stop offset="45%" stop-color="currentColor"/>
+      <stop offset="100%" stop-color="#000" stop-opacity=".3"/></radialGradient></defs>
+    <g stroke="rgba(0,0,0,.35)" stroke-width="2">
+      <circle cx="14" cy="20" r="11" fill="currentColor"/>
+      <circle cx="50" cy="20" r="11" fill="currentColor"/>
+      <circle cx="14" cy="20" r="6" fill="#cfeeff" stroke="none" opacity=".8"/>
+      <circle cx="50" cy="20" r="6" fill="#cfeeff" stroke="none" opacity=".8"/>
+      <ellipse cx="32" cy="35" rx="21" ry="21" fill="url(#ko-g)"/></g>
+    <g stroke="none">
+      <circle cx="24" cy="32" r="5.5" fill="#fff"/><circle cx="40" cy="32" r="5.5" fill="#fff"/>
+      <circle cx="24.5" cy="33" r="3" fill="#1a1030"/><circle cx="40.5" cy="33" r="3" fill="#1a1030"/>
+      <circle cx="25.7" cy="31.8" r="1" fill="#fff"/><circle cx="41.7" cy="31.8" r="1" fill="#fff"/>
+      <ellipse cx="32" cy="41" rx="6.5" ry="5" fill="#1a1030"/>
+      <ellipse cx="32" cy="39.5" rx="3" ry="2" fill="#3a2a55"/></g></svg>`,
+
+  goldfish:`<svg viewBox="0 0 64 64"><defs>
+    <radialGradient id="gf-g" cx="38%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="#fff" stop-opacity=".5"/>
+      <stop offset="45%" stop-color="currentColor"/>
+      <stop offset="100%" stop-color="#000" stop-opacity=".3"/></radialGradient></defs>
+    <g stroke="rgba(0,0,0,.3)" stroke-width="2">
+      <path d="M50 20c8 2 10 5 12 12-7 1-9 3-12 8-3-7-3-13 0-20z" fill="currentColor"/>
+      <path d="M48 30c6-4 12-3 16 0-4 4-10 5-16 4z" fill="currentColor" opacity=".75"/>
+      <ellipse cx="28" cy="34" rx="22" ry="17" fill="url(#gf-g)"/>
+      <path d="M12 26c-4-3-9-3-9 1 0 5 5 5 9 3z" fill="currentColor"/></g>
+    <g stroke="none">
+      <circle cx="18" cy="30" r="6" fill="#fff"/>
+      <circle cx="18.5" cy="30.5" r="3.3" fill="#1a1030"/>
+      <circle cx="20" cy="29" r="1.1" fill="#fff"/>
+      <path d="M12 38c3 3 7 3 10 1" fill="none" stroke="#1a1030" stroke-width="2" stroke-linecap="round"/>
+      <g fill="#fff" opacity=".55">
+        <path d="M34 26a6 6 0 010 16 8 8 0 000-16z"/>
+        <path d="M42 28a5 5 0 010 12 7 7 0 000-12z"/></g></g></svg>`
+};
+let _mascotUID = 0;
+function mascotSVG(teamIdx, size){
+  let m = MASCOTS[teams[teamIdx].mascot] || '';
+  // gradient ids must be unique each time the SVG is injected
+  const uid = 'mu'+(_mascotUID++);
+  m = m.replace(/(hm|ko|gf)-g/g, '$1-g-'+uid);
+  return `<span class="mascot" style="width:${size}px;height:${size}px;color:${COLORS[teamIdx]}">${m}</span>`;
+}
+let teams = [
+  { name:'Unstable Hamsters',  mascot:'hamster',  players:['Max','Jojo','Catrina','Jared'] },
+  { name:'Caffeinated Koalas', mascot:'koala',    players:['Beau','Hunter','Yer','Justin'] },
+  { name:'Feral Goldfish',     mascot:'goldfish', players:['Olivia','Olivia','Janet','Adam'] },
+];
+
+const games = [
+  {
+    name:'Cup Stack Race',
+    tag:'Speed · Solo run',
+    icon:'cups',
+    blurb:'Ten cups sit in a line, spaced apart — each team gets its own set.',
+    steps:[
+      'One runner sprints to cup #10 and carries it back to the #1 spot.',
+      'Stack it, then run for cup #9 and bring it back onto the pile.',
+      'Keep going — #8, #7, #6 — one cup per trip, in order.',
+      'Fastest team to bring all 10 cups home into a single stack wins.'
+    ]
+  },
+  {
+    name:'Penny Stack',
+    tag:'Precision · One hand',
+    icon:'pennies',
+    blurb:'A pile of pennies and one steady hand. That\u2019s the whole game.',
+    steps:[
+      'Using only ONE hand, stack every penny into a single tower.',
+      'No second hand, no leaning the tower on anything.',
+      'If it topples, keep building — the clock is still running.',
+      'Fastest team to stack all pennies in one tower wins.'
+    ]
+  },
+  {
+    name:'Balance Walk',
+    tag:'Focus · Team relay',
+    icon:'duck',
+    blurb:'A full-team relay with a rubber duck riding on your head.',
+    steps:[
+      'Balance the rubber duck on your head — no hands.',
+      'Walk to the marker and back, then pass the duck to the next teammate.',
+      'If the duck falls, reset and start that leg again.',
+      'Every player runs a leg. First team to finish the relay wins.'
+    ]
+  },
+  {
+    name:'Ball Drop',
+    tag:'Aim · Steady nerve',
+    icon:'balls',
+    blurb:'Drop from above and hit the target waiting below.',
+    steps:[
+      'Stand at the designated drop spot — feet stay put.',
+      'Release ping pong balls and try to land them in the target below.',
+      'Only balls that land in the target count.',
+      'Most balls in the target wins.'
+    ]
+  },
+  {
+    name:'Puzzle Race',
+    tag:'Brains · Teamwork',
+    icon:'puzzle',
+    blurb:'Solve the puzzle — with no reference picture to help you.',
+    steps:[
+      'Each team gets the same puzzle, pieces scrambled.',
+      'No box art, no picture, no hints — figure it out blind.',
+      'Talk it out, sort edges first, divide and conquer.',
+      'First team to place the final piece wins.'
+    ]
+  },
+  {
+    name:'Spoon Race + Mummy Wrap',
+    tag:'Relay · Two-part finale',
+    icon:'mummy',
+    blurb:'An egg-on-a-spoon relay that ends in a frantic mummy wrap.',
+    steps:[
+      'Part 1 — Relay: balance an egg on a spoon, carry it to the point and back.',
+      'Pass the spoon to the next teammate until everyone has gone.',
+      'Part 2 — Wrap: once the relay is done, race to wrap one teammate as a mummy.',
+      'First team to fully wrap their mummy wins the finale.'
+    ]
+  },
+];
+
+// scores[gameIndex] = {p1: teamIdx|null, p2:..., p3:...}
+let scores = games.map(()=>({p1:null,p2:null,p3:null}));
+
+/* ---------------- NAV ---------------- */
+const navBtns = document.querySelectorAll('nav button');
+navBtns.forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
+function go(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('show'));
+  document.getElementById(id).classList.add('show');
+  navBtns.forEach(b=>b.classList.toggle('active',b.dataset.go===id));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ---------------- LEADERBOARD ---------------- */
+function totals(){
+  const t = teams.map(()=>0);
+  scores.forEach(s=>{
+    if(s.p1!=null) t[s.p1]+=3;
+    if(s.p2!=null) t[s.p2]+=2;
+    if(s.p3!=null) t[s.p3]+=1;
+  });
+  return t;
+}
+function placeCounts(){
+  const c = teams.map(()=>({g:0,s:0,b:0}));
+  scores.forEach(s=>{
+    if(s.p1!=null) c[s.p1].g++;
+    if(s.p2!=null) c[s.p2].s++;
+    if(s.p3!=null) c[s.p3].b++;
+  });
+  return c;
+}
+function renderLeaderboard(){
+  const t = totals(), c = placeCounts();
+  const order = teams.map((tm,i)=>i).sort((a,b)=>t[b]-t[a]);
+  const max = Math.max(...t);
+
+  // table
+  const body = document.getElementById('lbBody');
+  body.innerHTML = order.map(i=>`
+    <tr class="${t[i]===max && max>0 ? 'lead':''}">
+      <td><span class="swatch" style="background:${COLORS[i]}"></span>${esc(teams[i].name)}</td>
+      <td>${c[i].g}</td><td>${c[i].s}</td><td>${c[i].b}</td>
+      <td class="total" style="color:${COLORS[i]}">${t[i]}</td>
+    </tr>`).join('');
+
+  // podium (top 3 by total)
+  const pod = document.getElementById('podium');
+  const slots = [
+    {key:'second',rank:'2',i:order[1]},
+    {key:'first', rank:'1',i:order[0],crown:'👑'},
+    {key:'third', rank:'3',i:order[2]},
+  ];
+  pod.innerHTML = slots.map(s=>{
+    if(s.i==null) return '<div></div>';
+    return `<div class="pod ${s.key}" style="border-color:${COLORS[s.i]}">
+      ${s.crown?`<div class="crown">👑</div>`:''}
+      <div class="rank">${s.rank}</div>
+      ${mascotSVG(s.i,52)}
+      <div class="pname" style="color:${COLORS[s.i]}">${esc(teams[s.i].name)}</div>
+      <div class="pscore">${t[s.i]}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderEntry(){
+  const grid = document.getElementById('entryGrid');
+  grid.innerHTML = games.map((g,gi)=>{
+    const opt = sel => teams.map((tm,ti)=>
+      `<option value="${ti}" ${sel===ti?'selected':''}>${esc(tm.name)}</option>`).join('');
+    const row = (place,label,cls) => `
+      <div class="place-row">
+        <span class="place-tag ${cls}">${label}</span>
+        <select data-g="${gi}" data-p="${place}">
+          <option value="">— none —</option>${opt(scores[gi][place])}
+        </select>
+      </div>`;
+    return `<div class="card game-entry">
+      <h3><span class="num">${String(gi+1).padStart(2,'0')}</span>${esc(g.name)}</h3>
+      ${row('p1','1ST · 3PT','p1')}
+      ${row('p2','2ND · 2PT','p2')}
+      ${row('p3','3RD · 1PT','p3')}
+    </div>`;
+  }).join('');
+
+  grid.querySelectorAll('select').forEach(sel=>{
+    sel.addEventListener('change',e=>{
+      const gi=+e.target.dataset.g, p=e.target.dataset.p;
+      scores[gi][p] = e.target.value===''?null:+e.target.value;
+      renderLeaderboard();
+    });
+  });
+}
+
+document.getElementById('saveBtn').addEventListener('click',()=>{ renderLeaderboard(); toast('Scores saved!'); });
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  if(!confirm('Clear all scores for every game?')) return;
+  scores = games.map(()=>({p1:null,p2:null,p3:null}));
+  renderEntry(); renderLeaderboard(); toast('Scores reset');
+});
+
+/* ---------------- GAMES ---------------- */
+const ICONS = {
+  cups:`<svg viewBox="0 0 64 64" width="46" height="46"><g fill="none" stroke="var(--p3)" stroke-width="3" stroke-linejoin="round"><path d="M14 26h16l-3 22H17z"/><path d="M34 26h16l-3 22H37z"/><path d="M24 8h16l-3 16H27z"/></g></svg>`,
+  pennies:`<svg viewBox="0 0 64 64" width="46" height="46"><g fill="none" stroke="var(--p3)" stroke-width="3"><ellipse cx="32" cy="46" rx="16" ry="6"/><ellipse cx="32" cy="36" rx="16" ry="6"/><ellipse cx="32" cy="26" rx="16" ry="6"/><ellipse cx="32" cy="16" rx="16" ry="6"/></g></svg>`,
+  duck:`<svg viewBox="0 0 64 64" width="46" height="46"><g fill="none" stroke="var(--p3)" stroke-width="3" stroke-linejoin="round"><path d="M20 40c0-9 7-16 16-16s14 6 14 14c0 8-7 12-15 12H22c-6 0-10-3-10-8 0-4 3-6 8-6"/><path d="M50 30l8-3-6 7"/><circle cx="40" cy="28" r="1.6" fill="var(--p3)"/></g></svg>`,
+  balls:`<svg viewBox="0 0 64 64" width="46" height="46"><g fill="none" stroke="var(--p3)" stroke-width="3"><circle cx="26" cy="14" r="5"/><circle cx="40" cy="20" r="5"/><path d="M14 44h36l-4 12H18z"/><path d="M30 44v-6M40 44v-2"/></g></svg>`,
+  puzzle:`<svg viewBox="0 0 64 64" width="46" height="46"><g fill="none" stroke="var(--p3)" stroke-width="3" stroke-linejoin="round"><path d="M14 14h16v8a4 4 0 108 0v-8h12v16h-8a4 4 0 100 8h8v12H30v-8a4 4 0 10-8 0v8H14z"/></g></svg>`,
+  mummy:`<svg viewBox="0 0 64 64" width="46" height="46"><g fill="none" stroke="var(--p3)" stroke-width="3" stroke-linecap="round"><rect x="22" y="8" width="20" height="48" rx="10"/><path d="M22 20h20M22 30h20M22 40h20M22 50h20"/></g></svg>`
+};
+function renderGames(){
+  document.getElementById('gamesList').innerHTML = games.map((g,i)=>`
+    <div class="card gcard">
+      <div class="gnum">${String(i+1).padStart(2,'0')}</div>
+      <div class="gicon">${ICONS[g.icon]||''}</div>
+      <h3>${esc(g.name)}</h3>
+      <p>${esc(g.blurb)}</p>
+      <ol class="steps">${g.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol>
+      <span class="tagline">${esc(g.tag)}</span>
+    </div>`).join('');
+}
+
+/* ---------------- TEAMS ---------------- */
+function initials(n){ return (n.trim()[0]||'?').toUpperCase(); }
+function renderTeams(){
+  document.getElementById('teamsGrid').innerHTML = teams.map((t,i)=>{
+    const roster = t.players.filter(p=>p.trim()).map(p=>
+      `<li>${mascotSVG(i,30)}${esc(p)}</li>`).join('');
+    return `<div class="team-card" style="border-color:${COLORS[i]}">
+      <div class="thead">${mascotSVG(i,44)}<div>
+        <div class="tname" style="color:${COLORS[i]}">${esc(t.name)}</div>
+        <div class="tmeta">${t.players.filter(p=>p.trim()).length} players</div>
+      </div></div>
+      <ul class="roster">${roster}</ul>
+    </div>`;
+  }).join('');
+}
+
+/* ---------------- ADMIN ---------------- */
+function renderAdmin(){
+  document.getElementById('adminTeams').innerHTML = teams.map((t,i)=>{
+    const slots = [0,1,2,3].map(s=>`
+      <div class="fieldrow">
+        <label>Player ${s+1}</label>
+        <input data-team="${i}" data-slot="${s}" value="${esc(t.players[s]||'')}" placeholder="(empty)">
+      </div>`).join('');
+    return `<div class="admin-team" style="border-color:${COLORS[i]}">
+      <div class="fieldrow">
+        <label style="color:${COLORS[i]}">Team ${i+1}</label>
+        <input data-team="${i}" data-name="1" value="${esc(t.name)}">
+      </div>
+      <div class="fieldrow">
+        <label>Mascot</label>
+        <select data-team="${i}" data-mascot="1">
+          <option value="hamster" ${t.mascot==='hamster'?'selected':''}>🐹 Hamster</option>
+          <option value="koala" ${t.mascot==='koala'?'selected':''}>🐨 Koala</option>
+          <option value="goldfish" ${t.mascot==='goldfish'?'selected':''}>🐟 Goldfish</option>
+        </select>
+      </div>
+      ${slots}
+    </div>`;
+  }).join('');
+}
+document.getElementById('applyBtn').addEventListener('click',()=>{
+  document.querySelectorAll('#adminTeams input').forEach(inp=>{
+    const ti=+inp.dataset.team;
+    if(inp.dataset.name) teams[ti].name = inp.value.trim()||teams[ti].name;
+    else teams[ti].players[+inp.dataset.slot] = inp.value;
+  });
+  document.querySelectorAll('#adminTeams select[data-mascot]').forEach(sel=>{
+    teams[+sel.dataset.team].mascot = sel.value;
+  });
+  renderTeams(); renderEntry(); renderLeaderboard(); renderRevealBoard();
+  toast('Changes applied!');
+});
+
+/* ---------------- REVEAL ---------------- */
+let revealOrder = [];
+function buildRevealOrder(){
+  // interleave players across teams so the reveal jumps around
+  revealOrder = [];
+  const max = Math.max(...teams.map(t=>t.players.filter(p=>p.trim()).length));
+  for(let s=0;s<max;s++){
+    teams.forEach((t,ti)=>{
+      const p = t.players.filter(x=>x.trim())[s];
+      if(p) revealOrder.push({name:p,team:ti});
+    });
+  }
+}
+function renderRevealBoard(){
+  buildRevealOrder();
+  document.getElementById('revBoard').innerHTML = teams.map((t,i)=>`
+    <div class="rev-team" id="revTeam${i}" style="border-color:${COLORS[i]};color:${COLORS[i]}">
+      <h4>${mascotSVG(i,28)}${esc(t.name)}</h4>
+      <ul id="revList${i}"></ul>
+    </div>`).join('');
+}
+let revealing=false;
+document.getElementById('revealBtn').addEventListener('click',runReveal);
+function runReveal(){
+  if(revealing) return;
+  revealing=true;
+  buildRevealOrder();
+  renderRevealBoard();
+  document.querySelectorAll('.rev-team').forEach(e=>e.classList.remove('lit'));
+  const btn=document.getElementById('revealBtn');
+  btn.disabled=true; btn.textContent='Rolling…';
+  const nameEl=document.getElementById('slotName');
+  const teamEl=document.getElementById('slotTeam');
+  const arrowEl=document.getElementById('slotArrow');
+  const prog=document.getElementById('revProgress');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let idx=0;
+  const allNames = teams.flatMap(t=>t.players.filter(p=>p.trim()));
+
+  function next(){
+    if(idx>=revealOrder.length){
+      nameEl.textContent='🏆 TEAMS SET 🏆';
+      nameEl.className='slot-name';
+      teamEl.textContent=''; teamEl.classList.remove('in');
+      arrowEl.classList.remove('in');
+      prog.textContent='ALL PLAYERS ASSIGNED';
+      btn.disabled=false; btn.textContent='▶ Reveal again'; revealing=false;
+      return;
+    }
+    const {name,team}=revealOrder[idx];
+    prog.textContent=`PLAYER ${idx+1} / ${revealOrder.length}`;
+    teamEl.classList.remove('in'); arrowEl.classList.remove('in');
+    nameEl.className='slot-name spin';
+
+    let ticks=0;
+    const spinMs = reduced?0:60;
+    const totalTicks = reduced?1:14;
+    const spin=setInterval(()=>{
+      nameEl.textContent = allNames[Math.floor(Math.random()*allNames.length)];
+      if(++ticks>=totalTicks){
+        clearInterval(spin);
+        nameEl.textContent=name;
+        nameEl.className='slot-name burst';
+        nameEl.style.color=COLORS[team];
+        arrowEl.classList.add('in');
+        teamEl.innerHTML=mascotSVG(team,40)+'<span>'+esc(teams[team].name)+'</span>';
+        teamEl.style.color=COLORS[team];
+        setTimeout(()=>teamEl.classList.add('in'),120);
+        // light up the team + add player
+        const tc=document.getElementById('revTeam'+team);
+        tc.classList.add('lit');
+        const li=document.createElement('li');
+        li.innerHTML=mascotSVG(team,22)+esc(name);
+        document.getElementById('revList'+team).appendChild(li);
+        setTimeout(()=>li.classList.add('in'),60);
+        idx++;
+        setTimeout(next, reduced?200:1100);
+      }
+    }, spinMs || 1);
+  }
+  next();
+}
+
+/* ---------------- UTIL ---------------- */
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+let toastTimer;
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+/* ---------------- INIT ---------------- */
+renderLeaderboard(); renderEntry(); renderGames(); renderTeams(); renderAdmin(); renderRevealBoard();
+</script>
+</body>
+</html>
