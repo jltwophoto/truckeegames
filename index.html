@@ -217,6 +217,41 @@
   .slot-team.in{opacity:1}
   .arrow{font-family:var(--display);font-size:14px;color:var(--dim);opacity:0;transition:.3s}
   .arrow.in{opacity:1}
+
+  /* ---------- WELCOME ---------- */
+  .welcome-wrap{max-width:680px;margin:4vh auto 0;text-align:center;padding:20px}
+  .host{width:clamp(150px,32vw,220px);margin:0 auto 6px;filter:drop-shadow(0 8px 22px rgba(0,0,0,.5))}
+  .host svg{width:100%;height:auto;display:block;animation:bob 3.4s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+  .host-bubble{
+    display:inline-block;position:relative;max-width:90%;margin:0 auto 22px;
+    background:var(--panel2);border:2px solid var(--line);border-radius:14px;
+    padding:12px 18px;font-size:15px;color:var(--ink);line-height:1.45;
+  }
+  .host-bubble::after{content:"";position:absolute;top:-9px;left:50%;transform:translateX(-50%) rotate(45deg);
+    width:14px;height:14px;background:var(--panel2);border-left:2px solid var(--line);border-top:2px solid var(--line)}
+  .welcome-title{
+    font-size:clamp(22px,7vw,50px);line-height:1.35;color:var(--p1);
+    text-shadow:3px 0 var(--p2),-3px 0 var(--p3);margin-bottom:24px;
+  }
+  .welcome-title span{display:block}
+  .welcome-body{color:var(--ink);font-size:clamp(16px,2.4vw,21px);line-height:1.65;
+    max-width:54ch;margin:0 auto 38px}
+  .btn.big{font-size:13px;padding:20px 30px}
+
+  /* ---------- GAMES REVEAL ---------- */
+  .gr-detail{min-height:1.4em;opacity:0;transition:opacity .4s;max-width:46ch;margin:0 auto}
+  .gr-detail.in{opacity:1}
+  .gr-detail .gr-tag{font-family:var(--display);font-size:8px;letter-spacing:1px;color:var(--p2);
+    display:inline-block;border:1px solid var(--line);padding:5px 9px;border-radius:5px;margin-bottom:12px}
+  .gr-detail p{color:var(--dim);font-size:16px;line-height:1.5}
+  .gr-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:26px}
+  .gr-chip{display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid var(--line);
+    border-radius:10px;background:linear-gradient(160deg,var(--panel),var(--bg2));
+    opacity:.22;transform:translateY(6px);transition:.35s}
+  .gr-chip.lit{opacity:1;transform:none;border-color:var(--p3);box-shadow:0 0 18px -6px var(--p3)}
+  .gr-chip .gr-num{font-family:var(--display);font-size:13px;color:var(--p3);flex:none}
+  .gr-chip .gr-name{font-family:var(--display);font-size:8px;line-height:1.5;color:var(--ink)}
   .burst{animation:burst .5s ease}
   @keyframes burst{0%{transform:scale(.6);filter:brightness(2)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
   .reveal-progress{font-family:var(--display);font-size:8px;color:var(--dim);letter-spacing:1px}
@@ -259,16 +294,47 @@
 
 <nav>
   <span class="brand"><b>▶</b> THE&nbsp;TRUCKEE&nbsp;GAMES</span>
-  <button data-go="home" class="active">Leaderboard</button>
+  <button data-go="welcome" class="active">Welcome</button>
+  <button data-go="gamesreveal">Games Reveal</button>
+  <button data-go="reveal">Team Reveal</button>
   <button data-go="games">The Games</button>
   <button data-go="teams">The Teams</button>
-  <button data-go="reveal">Reveal</button>
+  <button data-go="home">Leaderboard</button>
 </nav>
 
 <main>
 
+  <!-- ============ WELCOME ============ -->
+  <section class="page show" id="welcome">
+    <div class="welcome-wrap">
+      <div class="host" id="host">HOST_SVG</div>
+      <div class="host-bubble">Welcome to the jungle, adventurer. I'm Banjo — your guide through the Truckee Games.</div>
+      <p class="eyebrow">// You're in</p>
+      <h1 class="welcome-title"><span>Welcome</span><span>to the</span><span>Games</span></h1>
+      <p class="welcome-body">You have been chosen to play in the Truckee Games — an elite competition of players and mixed teams to see who can be the overall winner and stand on top of the podium.</p>
+      <button class="btn big" id="toGamesReveal">Show me the games ▶</button>
+    </div>
+  </section>
+
+  <!-- ============ GAMES REVEAL ============ -->
+  <section class="page" id="gamesreveal">
+    <p class="eyebrow">// The events · In order</p>
+    <h1>THE <span class="glitch">LINEUP</span></h1>
+    <p class="sub">Six events, revealed in the order they'll be played. Tap to bring up each one.</p>
+
+    <div class="reveal-stage">
+      <div class="reveal-progress" id="grProgress">PRESS START</div>
+      <button class="slot-name namebtn" id="grSlot">▶ Reveal the games</button>
+      <div class="gr-detail" id="grDetail"></div>
+      <button class="btn" id="grNext" style="display:none">Next game ▶</button>
+      <button class="btn" id="toTeamReveal" style="display:none">Let's pick the teams ▶</button>
+    </div>
+
+    <div class="gr-board" id="grBoard"></div>
+  </section>
+
   <!-- ============ HOME / LEADERBOARD ============ -->
-  <section class="page show" id="home">
+  <section class="page" id="home">
     <p class="eyebrow">// Standings · Live</p>
     <h1>THE <span class="glitch">LEADERBOARD</span></h1>
     <p class="sub">Enter the top three finishers for each game. First takes 3 points, second takes 2, third takes 1. Totals update instantly.</p>
@@ -414,6 +480,152 @@ function mascotSVG(teamIdx, size){
   m = m.replace(/(hm|ko|gf)-g/g, '$1-g-'+uid);
   return `<span class="mascot" style="width:${size}px;height:${size}px;color:${COLORS[teamIdx]}">${m}</span>`;
 }
+
+/* Host character — "Banjo", styled after a jungle expedition guide:
+   floppy bush hat, reddish hair + scruffy beard, mustard scarf knotted at neck,
+   worn brown leather vest over a cream sweater. */
+const HOST_SVG = `<svg viewBox="0 0 200 248" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="skin" cx="44%" cy="34%" r="70%">
+      <stop offset="0%" stop-color="#f4cba2"/><stop offset="55%" stop-color="#e3ab7d"/>
+      <stop offset="100%" stop-color="#c2895d"/></radialGradient>
+    <radialGradient id="cheek" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#e08a6a" stop-opacity=".55"/><stop offset="100%" stop-color="#e08a6a" stop-opacity="0"/></radialGradient>
+    <linearGradient id="hat" x1="0" y1="0" x2="0.2" y2="1">
+      <stop offset="0%" stop-color="#c2bb9c"/><stop offset="50%" stop-color="#a59d7e"/>
+      <stop offset="100%" stop-color="#7f785f"/></linearGradient>
+    <linearGradient id="hatBrim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9b9377"/><stop offset="100%" stop-color="#736c52"/></linearGradient>
+    <linearGradient id="vest" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#6b5036"/><stop offset="55%" stop-color="#4a3623"/>
+      <stop offset="100%" stop-color="#2f2114"/></linearGradient>
+    <linearGradient id="scarf" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%" stop-color="#e6b23d"/><stop offset="60%" stop-color="#c68d20"/>
+      <stop offset="100%" stop-color="#9c6d14"/></linearGradient>
+    <linearGradient id="sweater" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#efe9d8"/><stop offset="100%" stop-color="#c8bfa3"/></linearGradient>
+    <linearGradient id="hair" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%" stop-color="#c46a2e"/><stop offset="100%" stop-color="#834219"/></linearGradient>
+    <linearGradient id="beard" x1="0" y1="0" x2="0.2" y2="1">
+      <stop offset="0%" stop-color="#c87539"/><stop offset="100%" stop-color="#824420"/></linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2.2"/></filter>
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .06 0"/></filter>
+  </defs>
+
+  <!-- cream sweater shoulders -->
+  <path d="M18 248c0-42 36-60 82-60s82 18 82 60z" fill="url(#sweater)" stroke="#a89e80" stroke-width="2.5"/>
+  <g stroke="#b8ae90" stroke-width="2.2" opacity=".6" fill="none">
+    <path d="M34 232c2 6 2 12 0 16M46 222c2 8 2 16 0 24M154 222c-2 8-2 16 0 24M166 232c-2 6-2 12 0 16"/></g>
+
+  <!-- vest back/shoulders (behind scarf) -->
+  <path d="M40 248c-3-46 16-62 30-66l30 16 30-16c14 4 33 20 30 66z" fill="url(#vest)" stroke="#241a0f" stroke-width="2.5"/>
+  <!-- vest interior shadow -->
+  <path d="M70 188l30 18 30-18-6 60h-48z" fill="#241a0f" opacity=".55"/>
+  <!-- vest lapels with fold highlights -->
+  <path d="M70 184l30 22-9 16-27-20z" fill="#5c4530" stroke="#241a0f" stroke-width="2"/>
+  <path d="M130 184l-30 22 9 16 27-20z" fill="#6b5238" stroke="#241a0f" stroke-width="2"/>
+  <path d="M68 196l18 12M132 196l-18 12" stroke="#7d6244" stroke-width="1.5" opacity=".7"/>
+
+  <!-- mustard scarf, bunched with folds -->
+  <path d="M60 182c4 22 22 34 40 34s36-12 40-34c-4 20-2 30-9 35-12 8-50 8-62 0-7-5-5-15-9-35z" fill="url(#scarf)" stroke="#7d5710" stroke-width="2.5"/>
+  <g stroke="#a87c18" stroke-width="2.2" opacity=".65" fill="none">
+    <path d="M74 192c3 12 1 22-2 30M88 198c1 12 0 22-1 30M112 198c-1 12 0 22 1 30M126 192c-3 12-1 22 2 30"/></g>
+  <g stroke="#f0cf6a" stroke-width="1.4" opacity=".6" fill="none">
+    <path d="M80 195c2 10 1 18-1 26M120 195c-2 10-1 18 1 26"/></g>
+  <!-- scarf knot -->
+  <path d="M88 196c4-4 20-4 24 0 3 4 2 12-2 15-6 4-14 4-20 0-4-3-5-11-2-15z" fill="url(#scarf)" stroke="#7d5710" stroke-width="2"/>
+  <path d="M92 200c4-2 12-2 16 0" stroke="#a87c18" stroke-width="1.5" opacity=".7"/>
+
+  <!-- neck with shadow -->
+  <rect x="87" y="156" width="26" height="38" rx="9" fill="url(#skin)"/>
+  <path d="M87 160c2 10 24 10 26 0v8c-4 8-22 8-26 0z" fill="#a06f44" opacity=".4"/>
+
+  <!-- hair behind face -->
+  <path d="M55 90c-9 22-9 44 2 60 5-28 4-46 2-62z" fill="url(#hair)"/>
+  <path d="M145 90c9 22 9 44-2 60-5-28-4-46-2-62z" fill="url(#hair)"/>
+
+  <!-- face base -->
+  <path d="M61 94c0 32 6 53 17 67 6 9 14 14 22 14s16-5 22-14c11-14 17-35 17-67 0-31-18-47-39-47S61 63 61 94z" fill="url(#skin)" stroke="#b07c4e" stroke-width="2"/>
+  <!-- face soft shading -->
+  <path d="M61 94c0 32 6 53 17 67-6-20-8-44-6-74z" fill="#b07c4e" opacity=".22"/>
+  <path d="M139 94c0 32-6 53-17 67 6-20 8-44 6-74z" fill="#b07c4e" opacity=".22"/>
+  <ellipse cx="78" cy="132" rx="11" ry="8" fill="url(#cheek)"/>
+  <ellipse cx="122" cy="132" rx="11" ry="8" fill="url(#cheek)"/>
+
+  <!-- ears -->
+  <ellipse cx="60" cy="113" rx="7" ry="11" fill="url(#skin)" stroke="#b07c4e" stroke-width="1.5"/>
+  <ellipse cx="140" cy="113" rx="7" ry="11" fill="url(#skin)" stroke="#b07c4e" stroke-width="1.5"/>
+  <path d="M58 109c3 2 4 8 2 12M142 109c-3 2-4 8-2 12" stroke="#a06f44" stroke-width="1.5" fill="none" opacity=".6"/>
+
+  <!-- scruffy beard underlayer (soft) -->
+  <path d="M60 116c-1 34 12 60 40 68 28-8 41-34 40-68-3 14-8 22-12 34-3 12-9 24-28 24s-25-12-28-24c-4-12-9-20-12-34z" fill="url(#beard)" filter="url(#soft)" opacity=".9"/>
+  <!-- beard texture strokes -->
+  <g stroke="#6f3a18" stroke-width="1.4" opacity=".5" fill="none">
+    <path d="M70 130c2 14 6 30 14 40M86 150c1 16 3 28 6 36M100 154v40M114 150c-1 16-3 28-6 36M130 130c-2 14-6 30-14 40"/></g>
+  <g stroke="#e0934f" stroke-width="1.2" opacity=".45" fill="none">
+    <path d="M76 134c2 12 5 24 10 34M124 134c-2 12-5 24-10 34"/></g>
+  <!-- moustache -->
+  <path d="M79 148c6 6 15 6 21 2 6 4 15 4 21-2-3 10-13 14-21 11-8 3-18-1-21-11z" fill="#9a4f22"/>
+  <path d="M83 150c5 3 12 3 17 1 5 2 12 2 17-1" stroke="#7a3d18" stroke-width="1.2" opacity=".6" fill="none"/>
+
+  <!-- brows -->
+  <path d="M72 104c8-6 18-6 25-2 1 2 0 4-2 4-7-3-15-3-21 1-2 1-3-2-2-3z" fill="#8a4a20"/>
+  <path d="M128 104c-8-6-18-6-25-2-1 2 0 4 2 4 7-3 15-3 21 1 2 1 3-2 2-3z" fill="#8a4a20"/>
+
+  <!-- eye sockets shadow -->
+  <ellipse cx="84" cy="119" rx="10" ry="7.5" fill="#a06f44" opacity=".25"/>
+  <ellipse cx="116" cy="119" rx="10" ry="7.5" fill="#a06f44" opacity=".25"/>
+  <!-- eyes -->
+  <path d="M76 119c3-5 13-5 16 0-3 5-13 5-16 0z" fill="#fff"/>
+  <path d="M108 119c3-5 13-5 16 0-3 5-13 5-16 0z" fill="#fff"/>
+  <circle cx="84" cy="119" r="3.6" fill="#7a5a30"/>
+  <circle cx="116" cy="119" r="3.6" fill="#7a5a30"/>
+  <circle cx="84" cy="119" r="1.7" fill="#3a2a16"/>
+  <circle cx="116" cy="119" r="1.7" fill="#3a2a16"/>
+  <circle cx="85.4" cy="117.6" r="1.2" fill="#fff"/>
+  <circle cx="117.4" cy="117.6" r="1.2" fill="#fff"/>
+  <!-- upper lids -->
+  <path d="M75 117c4-4 14-4 18 0" stroke="#7a4a26" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M107 117c4-4 14-4 18 0" stroke="#7a4a26" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- lower lid hint -->
+  <path d="M77 123c4 3 12 3 15 0M108 123c4 3 12 3 15 0" stroke="#c98a5a" stroke-width="1.2" fill="none" opacity=".6"/>
+
+  <!-- nose with bridge shading -->
+  <path d="M98 116c-1 8-4 14-6 18-1 3 1 6 4 7 2 1 6 1 8 0 3-1 5-4 4-7-2-4-5-10-6-18z" fill="#d99c6b" opacity=".55"/>
+  <path d="M101 122c-3 8-6 12-2 16 2 2 6 2 9 0" fill="none" stroke="#a8703f" stroke-width="2.4" stroke-linecap="round"/>
+  <ellipse cx="96" cy="138" rx="2" ry="1.4" fill="#a8703f" opacity=".5"/>
+  <ellipse cx="106" cy="138" rx="2" ry="1.4" fill="#a8703f" opacity=".5"/>
+
+  <!-- mouth -->
+  <path d="M87 160c8 5 18 5 26 0-4 6-10 8-13 8s-9-2-13-8z" fill="#9a5638"/>
+  <path d="M87 160c8 4 18 4 26 0" stroke="#6f3a1e" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+  <!-- floppy bush hat: crown -->
+  <path d="M56 90c0-27 19-46 44-46s44 19 44 46c-14-7-28-10-44-10s-30 3-44 10z" fill="url(#hat)" stroke="#615b44" stroke-width="2.5"/>
+  <!-- crown shading + crease -->
+  <path d="M56 90c0-27 19-46 44-46-18 6-30 24-30 50z" fill="#615b44" opacity=".18"/>
+  <path d="M74 62c10-6 42-6 52 0" stroke="#615b44" stroke-width="2" opacity=".5" fill="none"/>
+  <path d="M82 50c8-4 28-4 36 0" stroke="#cfc8ac" stroke-width="2.5" opacity=".5" fill="none"/>
+  <!-- wide drooping brim -->
+  <path d="M28 92c10-11 35-17 72-17s62 6 72 17c-6 17-27 25-46 25-9 0-17-3-26-3s-17 3-26 3c-19 0-40-8-46-25z" fill="url(#hatBrim)" stroke="#615b44" stroke-width="2.5"/>
+  <!-- brim underside shadow + droop fold -->
+  <path d="M28 92c10-3 35-6 72-6s62 3 72 6c-3 8-10 14-18 18 4-8 2-14-4-16-16-4-84-4-100 0-6 2-8 8-4 16-8-4-15-10-18-18z" fill="#5a5440" opacity=".4"/>
+  <path d="M64 104c12 7 60 7 72 0" stroke="#615b44" stroke-width="2" opacity=".5" fill="none"/>
+  <!-- eyelets -->
+  <circle cx="58" cy="91" r="2" fill="#5a5440"/><circle cx="142" cy="91" r="2" fill="#5a5440"/>
+  <!-- brim top highlight -->
+  <path d="M40 90c30-10 90-10 120 0" stroke="#cfc8ac" stroke-width="2" opacity=".4" fill="none"/>
+  <!-- hair peeking under brim -->
+  <path d="M59 110c-3 9-3 18 0 24 4-7 5-15 4-24z" fill="url(#hair)"/>
+  <path d="M141 110c3 9 3 18 0 24-4-7-5-15-4-24z" fill="url(#hair)"/>
+  <g stroke="#6f3a18" stroke-width="1.2" opacity=".5" fill="none">
+    <path d="M60 112c-2 6-2 12-1 18M140 112c2 6 2 12 1 18"/></g>
+
+  <!-- overall subtle grain for realism -->
+  <rect x="0" y="0" width="200" height="248" filter="url(#grain)" opacity=".5"/>
+</svg>`;
 let teams = [
   { name:'Unstable Hamsters',  mascot:'hamster',  players:['Max','Jojo','Catrina','Jared'] },
   { name:'Caffeinated Koalas', mascot:'koala',    players:['Beau','Hunter','Yer','Justin'] },
@@ -675,6 +887,75 @@ document.getElementById('applyBtn').addEventListener('click',()=>{
   toast('Changes applied!');
 });
 
+/* ---------------- GAMES REVEAL ---------------- */
+const grSlot   = document.getElementById('grSlot');
+const grDetail = document.getElementById('grDetail');
+const grProg   = document.getElementById('grProgress');
+const grNext   = document.getElementById('grNext');
+const grBoardEl = document.getElementById('grBoard');
+const toTeamReveal = document.getElementById('toTeamReveal');
+let grIdx = 0;
+let grState = 'idle'; // idle | name | revealed | done
+
+function renderGrBoard(){
+  grBoardEl.innerHTML = games.map((g,i)=>`
+    <div class="gr-chip" id="grChip${i}">
+      <span class="gr-num">${String(i+1).padStart(2,'0')}</span>
+      <span class="gr-name">${esc(g.name)}</span>
+    </div>`).join('');
+}
+
+grSlot.addEventListener('click', ()=>{
+  if(grState==='idle'){ renderGrBoard(); grIdx=0; showNextGame(); }
+  else if(grState==='name'){ revealGame(); }
+});
+grNext.addEventListener('click', showNextGame);
+
+function showNextGame(){
+  if(grIdx >= games.length){
+    grSlot.className='slot-name namebtn';
+    grSlot.textContent='🎮 THAT\u2019S THE LINEUP 🎮';
+    grSlot.style.color='';
+    grDetail.classList.remove('in'); grDetail.innerHTML='';
+    grProg.textContent='ALL GAMES REVEALED';
+    grNext.style.display='none';
+    toTeamReveal.style.display='';
+    grState='done';
+    return;
+  }
+  const g = games[grIdx];
+  grProg.textContent=`GAME ${grIdx+1} / ${games.length} · TAP TO REVEAL`;
+  grSlot.className='slot-name namebtn pulse';
+  grSlot.style.color='';
+  grSlot.textContent=`Game ${grIdx+1}`;
+  grDetail.classList.remove('in'); grDetail.innerHTML='';
+  grNext.style.display='none';
+  toTeamReveal.style.display='none';
+  grState='name';
+}
+
+function revealGame(){
+  const g = games[grIdx];
+  grSlot.className='slot-name namebtn burst';
+  grSlot.style.color='var(--p3)';
+  grSlot.textContent=g.name;
+  grDetail.innerHTML=`<span class="gr-tag">${esc(g.tag)}</span><p>${esc(g.blurb)}</p>`;
+  setTimeout(()=>grDetail.classList.add('in'),80);
+
+  const chip=document.getElementById('grChip'+grIdx);
+  if(chip) chip.classList.add('lit');
+
+  grIdx++;
+  grState='revealed';
+  grNext.style.display='';
+  grNext.textContent = grIdx>=games.length ? 'See the full lineup ▶' : 'Next game ▶';
+  grProg.textContent=`${grIdx} / ${games.length} REVEALED`;
+}
+
+/* ---------------- FLOW BUTTONS ---------------- */
+document.getElementById('toGamesReveal').addEventListener('click',()=>go('gamesreveal'));
+toTeamReveal.addEventListener('click',()=>go('reveal'));
+
 /* ---------------- REVEAL ---------------- */
 let revealOrder = [];
 function buildRevealOrder(){
@@ -779,7 +1060,8 @@ function toast(msg){
 }
 
 /* ---------------- INIT ---------------- */
-renderLeaderboard(); renderEntry(); renderGames(); renderTeams(); renderAdmin(); renderRevealBoard();
+renderLeaderboard(); renderEntry(); renderGames(); renderTeams(); renderAdmin(); renderRevealBoard(); renderGrBoard();
+document.getElementById('host').innerHTML = HOST_SVG;
 </script>
 </body>
 </html>
